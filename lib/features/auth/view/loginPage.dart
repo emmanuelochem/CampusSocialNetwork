@@ -18,14 +18,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  AuthDataProvider authDataProvider;
-
-  @override
-  didChangeDependencies() {
-    super.didChangeDependencies();
-    authDataProvider = Provider.of<AuthDataProvider>(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     // var log = authDataProvider;
@@ -50,19 +42,21 @@ class _LoginPageState extends State<LoginPage> {
             top: false,
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  //phone
-                  authDataProvider.loginPage == 'phone'
-                      ? const EnterPhone()
-                      : const SizedBox(),
-                  //otp
-                  authDataProvider.loginPage == 'otp'
-                      ? const VerifyPhone()
-                      : const SizedBox(),
-                ],
-              ),
+              child: Consumer<AuthDataProvider>(builder: (context, state, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    //phone
+                    state.loginPage == 'phone'
+                        ? const EnterPhone()
+                        : const SizedBox(),
+                    //otp
+                    state.loginPage == 'otp'
+                        ? const VerifyPhone()
+                        : const SizedBox(),
+                  ],
+                );
+              }),
             ),
           )),
     );
@@ -83,8 +77,9 @@ class _EnterPhoneState extends State<EnterPhone> {
   AuthDataProvider authDataProvider;
 
   @override
-  didChangeDependencies() {
-    super.didChangeDependencies();
+  @override
+  void initState() {
+    super.initState();
     authDataProvider = context.read<AuthDataProvider>();
   }
 
@@ -105,7 +100,8 @@ class _EnterPhoneState extends State<EnterPhone> {
     if (response == null) {
       setState(() => _isLoading = false);
     }
-    if (response == 'proceed') {
+    if (response == 'success') {
+      print(response);
       setState(() => _isLoading = false);
       authDataProvider.loginPage = 'otp';
     }
@@ -204,13 +200,12 @@ class _VerifyPhoneState extends State<VerifyPhone> {
   AuthController authController = AuthController();
 
   AuthDataProvider authDataProvider;
-  UserDataProvider userDataProvider;
 
   @override
-  didChangeDependencies() {
-    super.didChangeDependencies();
-    authDataProvider = context.watch<AuthDataProvider>();
-    userDataProvider = context.watch<UserDataProvider>();
+  @override
+  void initState() {
+    super.initState();
+    authDataProvider = context.read<AuthDataProvider>();
   }
 
   bool _isLoading = false;
@@ -306,19 +301,22 @@ class _VerifyPhoneState extends State<VerifyPhone> {
                     : _isLoading
                         ? null
                         : () async {
-                            if (!_formKey.currentState.validate()) return;
+                            if (!_formKey.currentState.validate()) return null;
                             setState(() => _isLoading = true);
                             Map<String, dynamic> data = {
                               'phone': authDataProvider.loginPhone,
                               'code': authDataProvider.otp,
                             };
-                            var response = await authController.validateLogin(
+                            var response = await authDataProvider.validateLogin(
                               data: data,
                               context: context,
-                              userDataProvider: userDataProvider,
                             );
                             if (response == null) {
                               setState(() => _isLoading = false);
+                            }
+                            if (response == 'success') {
+                              return Navigator.pushReplacementNamed(
+                                  context, '/home');
                             }
                           },
                 text: 'Verify'),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mysocial_app/features/auth/auth.dart';
 import 'package:mysocial_app/features/timeline/timeline.dart';
 import 'package:provider/provider.dart';
 
@@ -20,14 +19,6 @@ class CommentBox extends StatefulWidget {
 }
 
 class _CommentBoxState extends State<CommentBox> {
-  UserDataProvider _userDataProvider;
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
-    _userDataProvider = context.read<UserDataProvider>();
-  }
-
   @override
   Widget build(BuildContext context) {
     final border = _border(context);
@@ -62,14 +53,11 @@ class _CommentBoxState extends State<CommentBox> {
             ),
             Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: CircleAvatar(
-                    backgroundImage: _userDataProvider.profile == null
-                        ? const NetworkImage(
-                            "https://csn-test-bucket.s3.amazonaws.com/images/Lrm19kqvfDYhc1gbbldVf63eBVETSIWjrKrAAZvR.jpg")
-                        : const NetworkImage(
-                            "https://csn-test-bucket.s3.amazonaws.com/images/Lrm19kqvfDYhc1gbbldVf63eBVETSIWjrKrAAZvR.jpg"),
+                    backgroundImage: NetworkImage(
+                        "https://csn-test-bucket.s3.amazonaws.com/images/Lrm19kqvfDYhc1gbbldVf63eBVETSIWjrKrAAZvR.jpg"),
                     radius: 20,
                   ),
                 ),

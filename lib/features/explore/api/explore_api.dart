@@ -1,6 +1,6 @@
 import 'package:mysocial_app/core/api/network_handler.dart';
 
-class ExploreApi with BaseApi {
+class ExploreApi extends BaseApi {
   Future getEplore({int pageNumber}) async {
     String route = 'posts/explore';
     Map<String, dynamic> header = {};

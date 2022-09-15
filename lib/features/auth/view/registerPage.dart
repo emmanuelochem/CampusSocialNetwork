@@ -360,141 +360,138 @@ class GenderSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AuthDataProvider>(
-      create: (context) => AuthDataProvider(),
-      child: SizedBox(
-        height: 0.8.sh,
-        width: 1.sw,
-        child: Column(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'What\'s your gender',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).primaryColor),
-                ),
-                SizedBox(
-                  height: 0.03.sh,
-                ),
-                SizedBox(
-                  width: 0.7.sw,
-                  child: Row(
-                    children: [
-                      // MALE
-                      Expanded(
-                        child: Consumer<AuthDataProvider>(
-                          builder: (context, state, _) => GestureDetector(
-                            onTap: () {
-                              state.isMale = true;
-                            },
-                            child: Container(
-                              height: 0.13.sh,
-                              width: 0.13.sw,
-                              decoration: BoxDecoration(
+    return SizedBox(
+      height: 0.8.sh,
+      width: 1.sw,
+      child: Column(
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'What\'s your gender',
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).primaryColor),
+              ),
+              SizedBox(
+                height: 0.03.sh,
+              ),
+              SizedBox(
+                width: 0.7.sw,
+                child: Row(
+                  children: [
+                    // MALE
+                    Expanded(
+                      child: Consumer<AuthDataProvider>(
+                        builder: (context, state, _) => GestureDetector(
+                          onTap: () {
+                            state.isMale = true;
+                          },
+                          child: Container(
+                            height: 0.13.sh,
+                            width: 0.13.sw,
+                            decoration: BoxDecoration(
+                              color: state.isMale
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.white,
+                              border: Border.all(
                                 color: state.isMale
-                                    ? Theme.of(context).primaryColor
-                                    : Colors.white,
-                                border: Border.all(
+                                    ? Colors.white
+                                    : Theme.of(context).primaryColor,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  PhosphorIcons.gender_male,
+                                  size: 40.sp,
                                   color: state.isMale
                                       ? Colors.white
                                       : Theme.of(context).primaryColor,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    PhosphorIcons.gender_male,
-                                    size: 40.sp,
+                                Text(
+                                  'Male',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w500,
                                     color: state.isMale
                                         ? Colors.white
                                         : Theme.of(context).primaryColor,
                                   ),
-                                  Text(
-                                    'Male',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: state.isMale
-                                          ? Colors.white
-                                          : Theme.of(context).primaryColor,
-                                    ),
-                                  )
-                                ],
-                              ),
+                                )
+                              ],
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      // FEMALE
-                      Expanded(
-                        child: Consumer<AuthDataProvider>(
-                          builder: (context, state, _) => GestureDetector(
-                            onTap: () {
-                              state.isMale = false;
-                            },
-                            child: Container(
-                              height: 0.13.sh,
-                              width: 0.13.sw,
-                              decoration: BoxDecoration(
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    // FEMALE
+                    Expanded(
+                      child: Consumer<AuthDataProvider>(
+                        builder: (context, state, _) => GestureDetector(
+                          onTap: () {
+                            state.isMale = false;
+                          },
+                          child: Container(
+                            height: 0.13.sh,
+                            width: 0.13.sw,
+                            decoration: BoxDecoration(
+                              color: !state.isMale
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.white,
+                              border: Border.all(
                                 color: !state.isMale
-                                    ? Theme.of(context).primaryColor
-                                    : Colors.white,
-                                border: Border.all(
+                                    ? Colors.white
+                                    : Theme.of(context).primaryColor,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  PhosphorIcons.gender_female,
+                                  size: 40.sp,
                                   color: !state.isMale
                                       ? Colors.white
                                       : Theme.of(context).primaryColor,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    PhosphorIcons.gender_female,
-                                    size: 40.sp,
+                                Text(
+                                  'Female',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w500,
                                     color: !state.isMale
                                         ? Colors.white
                                         : Theme.of(context).primaryColor,
                                   ),
-                                  Text(
-                                    'Female',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: !state.isMale
-                                          ? Colors.white
-                                          : Theme.of(context).primaryColor,
-                                    ),
-                                  )
-                                ],
-                              ),
+                                )
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-            const Spacer(),
-            PrimaryButton(
-                onPressed: () {
-                  //log.page = 'otp';
-                  log.page = 'department';
-                },
-                text: 'Continue'),
-          ],
-        ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+          const Spacer(),
+          PrimaryButton(
+              onPressed: () {
+                //log.page = 'otp';
+                log.page = 'department';
+              },
+              text: 'Continue'),
+        ],
       ),
     );
   }
@@ -689,9 +686,9 @@ class _DisplayNameState extends State<DisplayName> {
               cancelFunction: () => Navigator.pop(context),
               context: context);
         }
-        print(res);
-        GeneralLogics.saveToken(res['token']);
-        GeneralLogics.setUserDataProvider(userDataProvider, res['data']);
+        // print(res);
+        // GeneralLogics.saveToken(res['token']);
+        // GeneralLogics.setUserDataProvider(userDataProvider, res['data']);
         Navigator.pushReplacementNamed(context, '/home');
         return null;
       });
@@ -699,14 +696,6 @@ class _DisplayNameState extends State<DisplayName> {
       print(e);
       setState(() => _isLoading = false);
     }
-  }
-
-  UserDataProvider userDataProvider;
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
-    userDataProvider = context.watch<UserDataProvider>();
   }
 
   @override

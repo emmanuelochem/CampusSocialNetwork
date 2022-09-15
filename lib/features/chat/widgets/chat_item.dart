@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:mysocial_app/features/chat/views/conversation.dart';
+import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
+import 'package:mysocial_app/features/chat/models/message_model.dart';
+import 'package:mysocial_app/features/chat/models/user_model.dart';
+import 'package:mysocial_app/features/chat/views/chat_details.dart';
+import 'package:intl/intl.dart';
 
 class ChatItem extends StatefulWidget {
-  final String dp;
-  final String name;
-  final String time;
-  final String msg;
+  int chat_id;
+  int title;
+  String createdAt;
+  MessagesModel lastMessage;
+  List<LocalUser> members;
   final bool isOnline;
   final int counter;
 
-  const ChatItem({
+  ChatItem({
     Key key,
-    @required this.dp,
-    @required this.name,
-    @required this.time,
-    @required this.msg,
-    @required this.isOnline,
-    @required this.counter,
+    this.chat_id,
+    this.title,
+    this.createdAt,
+    this.lastMessage,
+    this.members,
+    this.isOnline = false,
+    this.counter = 1,
   }) : super(key: key);
 
   @override
@@ -30,54 +36,81 @@ class _ChatItemState extends State<ChatItem> {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
       child: ListTile(
         contentPadding: const EdgeInsets.all(0),
+        dense: true,
         leading: Stack(
           children: <Widget>[
             CircleAvatar(
               backgroundImage: NetworkImage(
-                widget.dp,
+                widget.members[0].photo,
               ),
               radius: 25,
             ),
-            Positioned(
-              bottom: 0.0,
-              right: 6.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                height: 11,
-                width: 11,
-                child: Center(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: widget.isOnline ? Colors.greenAccent : Colors.grey,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    height: 7,
-                    width: 7,
-                  ),
-                ),
-              ),
-            ),
+            // Positioned(
+            //   bottom: 0.0,
+            //   right: 6.0,
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //       color: Colors.white,
+            //       borderRadius: BorderRadius.circular(6),
+            //     ),
+            //     height: 11,
+            //     width: 11,
+            //     child: Center(
+            //       child: Container(
+            //         decoration: BoxDecoration(
+            //           color: widget.isOnline ? Colors.greenAccent : Colors.grey,
+            //           borderRadius: BorderRadius.circular(6),
+            //         ),
+            //         height: 7,
+            //         width: 7,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
-        title: Text(widget.name,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.black,
-              fontWeight: FontWeight.w600,
-            )),
-        subtitle: Text(
-          widget.msg,
-          style: TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.4)),
+        title: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(widget.members[0].nickname,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              )),
+        ),
+        subtitle: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                Icon(
+                  widget.lastMessage.receipt == 'sent'
+                      ? PhosphorIcons.check_bold
+                      : PhosphorIcons.checks_bold,
+                  color: widget.lastMessage.receipt == 'read'
+                      ? Colors.blue
+                      : Colors.grey,
+                  size: 20,
+                ),
+              ],
+            ),
+            const SizedBox(
+              width: 3,
+            ),
+            Text(
+              widget.lastMessage.content,
+              style:
+                  TextStyle(fontSize: 14, color: Colors.black.withOpacity(0.4)),
+            ),
+          ],
         ),
         trailing: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             const SizedBox(height: 10),
             Text(
-              widget.time,
+              DateFormat.Hm().format(DateTime.parse(widget.createdAt)),
               style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w300,
@@ -120,7 +153,10 @@ class _ChatItemState extends State<ChatItem> {
           // );
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => ChatDetailPage()),
+            MaterialPageRoute(
+                builder: (context) => ChatDetailPage(
+                      chatId: widget.chat_id,
+                    )),
           );
         },
       ),

@@ -7,6 +7,5 @@ export 'controller/auth_controller.dart';
 
 //STATES
 export 'providers/authDataProvider.dart';
-export 'providers/userDataProvider.dart';
 
 //WIDGETS

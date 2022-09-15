@@ -1,11 +1,39 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:mysocial_app/core/logics/generalLogics.dart';
+import 'package:mysocial_app/core/cache/local_cache.dart';
+
+class Endpoints {
+  Endpoints._();
+
+  // base url
+
+  // static const bool _staging = true;
+  // final bool isAndroid = (Platform.isAndroid);
+  // static const String baseUrl = _staging
+  //     ? "https://reqres.in/api"
+  //     : Platform.isAndroid
+  //         ? 'http://127.0.0.1:8000/api/'
+  //         : 'http://127.0.0.1:8000/api/';
+
+  // receiveTimeout
+  static const int receiveTimeout = 15000;
+
+  // connectTimeout
+  static const int connectionTimeout = 15000;
+}
 
 abstract class BaseApi {
+  final LocalCache _userCache = LocalCache();
+
   //final String _serverUrl = 'http://10.0.2.2:8000/api/'; //android
   final String _serverUrl = 'http://127.0.0.1:8000/api/'; //ios
-
+  final Map<String, dynamic> _headerContent = {
+    'Accept': 'application/json',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/json',
+  };
   Future httpGet(
       {String route,
       Map<String, dynamic> header,
@@ -13,13 +41,10 @@ abstract class BaseApi {
       bool successSnackbar = false,
       BuildContext context}) async {
     route = _serverUrl + route;
-    header['Accept'] = 'application/json';
-    header['Connection'] = 'keep-alive';
-    header['Content-Type'] = 'application/json';
+    header.addAll(_headerContent);
     if (hasToken) {
-      String token = await GeneralLogics.getToken();
-      //print(token);
-      header['Authorization'] = 'Bearer $token';
+      var user = await _userCache.fetch('USER');
+      header['Authorization'] = 'Bearer ${user['token']}';
     }
     Dio dio = Dio(BaseOptions(
       baseUrl: _serverUrl,
@@ -45,7 +70,7 @@ abstract class BaseApi {
         return response.data;
       }
       return;
-    }).catchError((error) => print(error));
+    }).catchError((error) => log(error));
   }
 
   Future httpPost(
@@ -56,12 +81,10 @@ abstract class BaseApi {
       bool successSnackbar = false,
       BuildContext context}) async {
     route = _serverUrl + route;
-    header['Accept'] = 'application/json';
-    header['Connection'] = 'keep-alive';
-    header['Content-Type'] = 'application/json';
+    header.addAll(_headerContent);
     if (hasToken) {
-      String token = await GeneralLogics.getToken();
-      header['Authorization'] = 'Bearer $token';
+      var user = await _userCache.fetch('USER');
+      header['Authorization'] = 'Bearer ${user['token']}';
     }
     Dio dio = Dio(BaseOptions(
       baseUrl: _serverUrl,
@@ -90,7 +113,7 @@ abstract class BaseApi {
         return response.data;
       }
       return null;
-    }).catchError((error) => print(error));
+    }).catchError((error) => log(error));
   }
 
   Future httpDelete(
@@ -101,12 +124,10 @@ abstract class BaseApi {
       bool successSnackbar = false,
       BuildContext context}) async {
     route = _serverUrl + route;
-    header['Accept'] = 'application/json';
-    header['Connection'] = 'keep-alive';
-    header['Content-Type'] = 'application/json';
+    header.addAll(_headerContent);
     if (hasToken) {
-      String token = await GeneralLogics.getToken();
-      header['Authorization'] = 'Bearer $token';
+      var user = await _userCache.fetch('USER');
+      header['Authorization'] = 'Bearer ${user['token']}';
     }
     Dio dio = Dio(BaseOptions(
       baseUrl: _serverUrl,
@@ -135,6 +156,6 @@ abstract class BaseApi {
         return response.data;
       }
       return null;
-    }).catchError((error) => print(error));
+    }).catchError((error) => log(error));
   }
 }

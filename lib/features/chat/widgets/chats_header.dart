@@ -18,7 +18,7 @@ class ChatAppBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         children: const [
           Text(
-            "DMs",
+            "Messages",
             style: TextStyle(
               fontSize: 22,
               color: Colors.black,
@@ -31,8 +31,9 @@ class ChatAppBar extends StatelessWidget {
         IconButton(
           onPressed: () => null,
           icon: SvgPicture.asset(
-            'assets/images/icons/discover_people.svg',
+            'assets/images/icons/search_icon.svg',
             color: Colors.black,
+            width: 23,
           ),
         ),
         IconButton(

@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:mysocial_app/core/cache/local_cache.dart';
+import 'package:mysocial_app/core/logics/generalLogics.dart';
+import 'package:mysocial_app/features/auth/api/authApi.dart';
+import 'package:recase/recase.dart';
 
 class AuthDataProvider with ChangeNotifier {
+  AuthDataProvider(this._localCache);
+  final LocalCache _localCache;
+
   String _phone;
   String get phone => _phone;
   set phone(String value) {
@@ -62,5 +69,32 @@ class AuthDataProvider with ChangeNotifier {
   set loginPhone(String value) {
     _loginPhone = value;
     notifyListeners();
+  }
+
+  Future validateLogin(
+      {Map<String, dynamic> data, BuildContext context}) async {
+    //print(localCache.fetch('USER'));
+    try {
+      AuthApi authApi = AuthApi();
+      await authApi.validateLogin(data).then((res) async {
+        // print(res);
+        if (res['status'] != 'success') {
+          return GeneralLogics.showAlert(
+              title: true,
+              titleText: ReCase(res['status']).sentenceCase,
+              body: true,
+              bodyText: ReCase(res['message']).sentenceCase,
+              cancel: true,
+              cancelText: 'Retry',
+              cancelFunction: () => Navigator.pop(context, null),
+              context: context);
+        }
+        //print(res['user']);
+        await _localCache.save('USER', res['user']);
+        return 'success';
+      });
+    } catch (e) {
+      return null;
+    }
   }
 }

@@ -1,56 +1,63 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mysocial_app/activity_dashboard.dart';
+import 'package:mysocial_app/composition_root.dart';
 import 'package:mysocial_app/core/utils/theme_light.dart';
+import 'package:mysocial_app/features/auth/providers/authDataProvider.dart';
 import 'package:mysocial_app/features/auth/view/loginPage.dart';
 import 'package:mysocial_app/features/auth/view/registerPage.dart';
-import 'package:mysocial_app/features/auth/view/splashScreenPage.dart';
 import 'package:mysocial_app/features/auth/view/welcomePage.dart';
+import 'package:mysocial_app/features/camera/providers/mediaDataProvider.dart';
+import 'package:mysocial_app/features/camera/providers/publishDataProvider.dart';
 import 'package:mysocial_app/features/camera/views/camera_screen.dart';
 import 'package:mysocial_app/features/camera/views/gallery_screen.dart';
-import 'package:mysocial_app/features/chat/views/chats.dart';
+import 'package:mysocial_app/features/chat/providers/conversation_provider.dart';
 import 'package:mysocial_app/features/explore/providers/explore_provider.dart';
-import 'package:mysocial_app/features/explore/views/explore_page.dart';
 import 'package:mysocial_app/features/profile/providers/profile_provider.dart';
-import 'package:mysocial_app/features/profile/views/profile_page.dart';
-import 'package:mysocial_app/features/timeline/views/feeds_page.dart';
+import 'package:mysocial_app/features/timeline/providers/comments_provider.dart';
+import 'package:mysocial_app/features/timeline/providers/feeds_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'features/auth/auth.dart';
-import 'features/camera/camera.dart';
-import 'features/timeline/timeline.dart';
-
-List<CameraDescription> cameras = [];
-
 Future<void> main() async {
-  // Fetch the available cameras before initializing the app.
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
-    cameras = await availableCameras();
-  } on CameraException {
-    //print('Error in fetching the cameras: $e');
-  }
+  WidgetsFlutterBinding.ensureInitialized();
+  await CompositionRoot.configure();
+  final firstPage = await CompositionRoot.start();
 
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => AuthDataProvider()),
-      ChangeNotifierProvider(create: (_) => UserDataProvider()),
-      ChangeNotifierProvider(create: (_) => MediaGalleryProvider()),
-      ChangeNotifierProvider(create: (_) => PublishDataProvider()),
-      ChangeNotifierProvider(create: (_) => FeedState()),
-      ChangeNotifierProvider(create: (_) => CommentsState()),
-      ChangeNotifierProvider(create: (_) => ExploreProvider()),
-      ChangeNotifierProvider(create: (_) => ProfileProvider()),
-    ],
-    child: const MyApp(),
-  ));
+  final _datasource = CompositionRoot.chatDataSource;
+  final _userService = CompositionRoot.userService;
+  final _localCache = CompositionRoot.localCache;
+
+  ChatsProvider conversationMessagesProvider =
+      ChatsProvider(_datasource, _userService, _localCache);
+  MediaGalleryProvider mediaGalleryProvider = MediaGalleryProvider();
+  PublishDataProvider publishDataProvider = PublishDataProvider();
+  FeedState feedState = FeedState();
+  CommentsState commentsState = CommentsState();
+  ExploreProvider exploreProvider = ExploreProvider();
+  ProfileProvider profileProvider = ProfileProvider();
+  AuthDataProvider authDataProvider = AuthDataProvider(_localCache);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => authDataProvider),
+        ChangeNotifierProvider(create: (_) => conversationMessagesProvider),
+        ChangeNotifierProvider(create: (_) => mediaGalleryProvider),
+        ChangeNotifierProvider(create: (_) => publishDataProvider),
+        ChangeNotifierProvider(create: (_) => feedState),
+        ChangeNotifierProvider(create: (_) => commentsState),
+        ChangeNotifierProvider(create: (_) => exploreProvider),
+        ChangeNotifierProvider(create: (_) => profileProvider),
+      ],
+      child: MyApp(firstPage: firstPage),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key key}) : super(key: key);
+  final Widget firstPage;
+  const MyApp({Key key, this.firstPage}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
@@ -67,9 +74,9 @@ class MyApp extends StatelessWidget {
             }
           },
           child: MaterialApp(
-              title: 'Flutter Demo',
+              title: 'Social Community App',
               theme: lightTheme,
-              home: SplashScreenPage(),
+              home: firstPage,
               routes: {
                 '/welcome': (context) => const WelcomePage(),
                 '/register': (context) => const RegisterPage(),
@@ -84,133 +91,27 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ActivityPage extends StatefulWidget {
-  const ActivityPage({Key key}) : super(key: key);
 
-  static final List<Widget> _homePages = <Widget>[
-    FeedPage(),
-    const ExplorePage(),
-    //CameraScreen(),
-    GalleryScreen(),
-    ChatPage(),
-    ProfilePage(
-      profileId: 6,
-    ),
-  ];
+// class _KeepAlivePage extends StatefulWidget {
+//   const _KeepAlivePage({
+//     Key key,
+//     @required this.child,
+//   }) : super(key: key);
 
-  @override
-  _ActivityPageState createState() => _ActivityPageState();
-}
+//   final Widget child;
 
-class _ActivityPageState extends State<ActivityPage> {
-  final double iconSize = 30;
-  final PageController pageController = PageController();
+//   @override
+//   _KeepAlivePageState createState() => _KeepAlivePageState();
+// }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
-        controller: pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: ActivityPage._homePages,
-      ),
-      bottomNavigationBar: _StreamagramBottomNavBar(
-        pageController: pageController,
-      ),
-    );
-  }
-}
+// class _KeepAlivePageState extends State<_KeepAlivePage>
+//     with AutomaticKeepAliveClientMixin {
+//   @override
+//   Widget build(BuildContext context) {
+//     super.build(context);
+//     return widget.child;
+//   }
 
-class _StreamagramBottomNavBar extends StatefulWidget {
-  const _StreamagramBottomNavBar({
-    Key key,
-    @required this.pageController,
-  }) : super(key: key);
-
-  final PageController pageController;
-
-  @override
-  State<_StreamagramBottomNavBar> createState() =>
-      _StreamagramBottomNavBarState();
-}
-
-class _StreamagramBottomNavBarState extends State<_StreamagramBottomNavBar> {
-  void _onNavigationItemTapped(int index) {
-    widget.pageController.jumpToPage(index);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    widget.pageController.addListener(() {
-      setState(() {});
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List bottomItems = [
-      widget.pageController.page == 0
-          ? "assets/images/icons/home_active_icon.svg"
-          : "assets/images/icons/home_icon.svg",
-      widget.pageController.page == 1
-          ? "assets/images/icons/search_active_icon.svg"
-          : "assets/images/icons/search_icon.svg",
-      widget.pageController.page == 2
-          ? "assets/images/icons/upload_active_icon.svg"
-          : "assets/images/icons/upload_icon.svg",
-      widget.pageController.page == 3
-          ? "assets/images/icons/comment_icon.svg"
-          : "assets/images/icons/comment_icon.svg",
-      widget.pageController.page == 4
-          ? "assets/images/icons/account_active_icon.svg"
-          : "assets/images/icons/account_icon.svg",
-    ];
-    return BottomAppBar(
-      color: widget.pageController.page == 2 ? Colors.black : Colors.white,
-      child: Container(
-        padding: const EdgeInsets.only(top: 10, bottom: 10),
-        child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(bottomItems.length, (index) {
-              return InkWell(
-                  onTap: () {
-                    _onNavigationItemTapped(index);
-                    widget.pageController.page?.toInt() ?? 0;
-                  },
-                  child: SvgPicture.asset(
-                    bottomItems[index],
-                    width: 27,
-                    color: widget.pageController.page == 2
-                        ? Colors.white
-                        : Colors.black,
-                  ));
-            })),
-      ),
-    );
-  }
-}
-
-class _KeepAlivePage extends StatefulWidget {
-  const _KeepAlivePage({
-    Key key,
-    @required this.child,
-  }) : super(key: key);
-
-  final Widget child;
-
-  @override
-  _KeepAlivePageState createState() => _KeepAlivePageState();
-}
-
-class _KeepAlivePageState extends State<_KeepAlivePage>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return widget.child;
-  }
-
-  @override
-  bool get wantKeepAlive => true;
-}
+//   @override
+//   bool get wantKeepAlive => true;
+// }

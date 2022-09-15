@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mysocial_app/core/components/buttons/primaryButton.dart';
+import 'package:mysocial_app/features/auth/providers/authDataProvider.dart';
+import 'package:provider/provider.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({Key key}) : super(key: key);
@@ -10,6 +12,13 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
+  AuthDataProvider authDataProvider;
+  @override
+  void initState() {
+    super.initState();
+    authDataProvider = context.read<AuthDataProvider>();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

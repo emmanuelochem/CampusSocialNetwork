@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
+import 'package:mysocial_app/features/chat/providers/conversation_provider.dart';
 
-import 'package:mysocial_app/features/chat/widgets/cdata.dart';
 import 'package:mysocial_app/features/chat/widgets/colors.dart';
+import 'package:provider/provider.dart';
 
 class ChatDetailPage extends StatefulWidget {
+  final int chatId;
+
+  const ChatDetailPage({Key key, @required this.chatId}) : super(key: key);
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    context.read<ChatsProvider>().getMessages(chatId: widget.chatId);
+  }
+
   final TextEditingController _sendMessageController = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -19,8 +30,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         elevation: 0,
         leading: GestureDetector(
             onTap: () {
+              print('xxxxx');
               Navigator.pop(context);
-              print('context');
             },
             child: const Icon(
               Icons.arrow_back_ios,
@@ -95,74 +106,77 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   Widget getBody() {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView(
-            padding:
-                const EdgeInsets.only(right: 20, left: 20, top: 20, bottom: 80),
-            children: List.generate(messages.length, (index) {
-              return ChatBubble(
-                  isMe: messages[index]['isMe'],
-                  messageType: messages[index]['messageType'],
-                  message: messages[index]['message'],
-                  profileImg: messages[index]['profileImg']);
-            }),
-          ),
-        ),
-        Container(
-          height: 80,
-          width: double.infinity,
-          decoration: BoxDecoration(color: grey.withOpacity(0.2)),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-            child: Row(
-              children: <Widget>[
-                const Icon(
-                  Icons.add_circle,
-                  size: 35,
-                  color: primary,
-                ),
-                Expanded(
-                  child: Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                        color: grey, borderRadius: BorderRadius.circular(20)),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: TextField(
-                        cursorColor: black,
-                        controller: _sendMessageController,
-                        decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Aa",
-                            suffixIcon: Icon(
-                              Icons.face,
-                              color: primary,
-                              size: 35,
-                            )),
+    return Consumer<ChatsProvider>(
+      builder: (context, state, _) {
+        return Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(
+                    right: 20, left: 20, top: 20, bottom: 80),
+                children: List.generate(state.messages.length, (index) {
+                  return ChatBubble(
+                    isMe: state.messages[index].is_mine == 'true',
+                    messageType: 1,
+                    message: state.messages[index].content,
+                  );
+                }),
+              ),
+            ),
+            Container(
+              height: 80,
+              width: double.infinity,
+              decoration: BoxDecoration(color: grey.withOpacity(0.2)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+                child: Row(
+                  children: <Widget>[
+                    const Icon(
+                      Icons.add_circle,
+                      size: 35,
+                      color: primary,
+                    ),
+                    Expanded(
+                      child: Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                            color: grey,
+                            borderRadius: BorderRadius.circular(20)),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: TextField(
+                            cursorColor: black,
+                            controller: _sendMessageController,
+                            decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "Aa",
+                                suffixIcon: Icon(
+                                  Icons.face,
+                                  color: primary,
+                                  size: 35,
+                                )),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        )
-      ],
+              ),
+            )
+          ],
+        );
+      },
     );
   }
 }
 
 class ChatBubble extends StatelessWidget {
   final bool isMe;
-  final String profileImg;
   final String message;
   final int messageType;
   const ChatBubble({
     Key key,
     this.isMe,
-    this.profileImg,
     this.message,
     this.messageType,
   }) : super(key: key);

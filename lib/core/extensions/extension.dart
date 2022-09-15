@@ -12,7 +12,7 @@ extension ProviderX on BuildContext {
   AuthDataProvider get authDataProvider => read<AuthDataProvider>();
   MediaGalleryProvider get mediaGalleryProvider => read<MediaGalleryProvider>();
   PublishDataProvider get publishDataProvider => read<PublishDataProvider>();
-  UserDataProvider get userDataProvider => read<UserDataProvider>();
+  // UserDataProvider get userDataProvider => read<UserDataProvider>();
   FeedState get feedProvider => read<FeedState>();
   CommentsState get commentsProvider => read<CommentsState>();
 }
