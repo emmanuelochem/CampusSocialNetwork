@@ -1,188 +1,102 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mysocial_app/features/chat/models/message_model.dart';
 
-class ChatBubble extends StatefulWidget {
-  final String message, time, username, type, replyText, replyName;
-  final bool isMe, isGroup, isReply;
+class ChatBubble extends StatelessWidget {
+  final MessagesModel message;
 
-  const ChatBubble(
-      {@required this.message,
-      @required this.time,
-      @required this.isMe,
-      @required this.isGroup,
-      @required this.username,
-      @required this.type,
-      @required this.replyText,
-      @required this.isReply,
-      @required this.replyName});
-
-  @override
-  _ChatBubbleState createState() => _ChatBubbleState();
-}
-
-class _ChatBubbleState extends State<ChatBubble> {
-  List colors = Colors.primaries;
-  static Random random = Random();
-  int rNum = random.nextInt(18);
-
+  const ChatBubble({
+    Key key,
+    this.message,
+  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final bg = widget.isMe
-        ? Theme.of(context).colorScheme.secondary
-        : Colors.grey[200];
-    final align =
-        widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final radius = widget.isMe
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(5.0),
-            bottomLeft: Radius.circular(5.0),
-            bottomRight: Radius.circular(10.0),
-          )
-        : const BorderRadius.only(
-            topRight: Radius.circular(5.0),
-            bottomLeft: Radius.circular(10.0),
-            bottomRight: Radius.circular(5.0),
-          );
     return Column(
-      crossAxisAlignment: align,
+      // crossAxisAlignment: CrossAxisAlignment.end,
+      // mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Container(
-          margin: const EdgeInsets.all(3.0),
-          padding: const EdgeInsets.all(5.0),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: radius,
-          ),
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width / 1.3,
-            minWidth: 20.0,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              widget.isMe
-                  ? const SizedBox()
-                  : widget.isGroup
-                      ? Padding(
-                          padding: const EdgeInsets.only(right: 48.0),
-                          child: Container(
-                            child: Text(
-                              widget.username,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colors[rNum],
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                            alignment: Alignment.centerLeft,
-                          ),
-                        )
-                      : const SizedBox(),
-              widget.isGroup
-                  ? widget.isMe
-                      ? const SizedBox()
-                      : const SizedBox(height: 5)
-                  : const SizedBox(),
-              widget.isReply
-                  ? Container(
-                      decoration: BoxDecoration(
-                        color: !widget.isMe ? Colors.grey[50] : Colors.blue[50],
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(5.0)),
-                      ),
-                      constraints: const BoxConstraints(
-                        minHeight: 25,
-                        maxHeight: 100,
-                        minWidth: 80,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Container(
-                              child: Text(
-                                widget.isMe ? "You" : widget.replyName,
-                                style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.secondary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                                maxLines: 1,
-                                textAlign: TextAlign.left,
-                              ),
-                              alignment: Alignment.centerLeft,
-                            ),
-                            const SizedBox(height: 2),
-                            Container(
-                              child: Text(
-                                widget.replyText,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 10,
-                                ),
-                                maxLines: 2,
-                              ),
-                              alignment: Alignment.centerLeft,
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : const SizedBox(width: 2),
-              widget.isReply ? const SizedBox(height: 5) : const SizedBox(),
-              Padding(
-                padding: EdgeInsets.all(widget.type == "text" ? 5 : 0),
-                child: widget.type == "text"
-                    ? !widget.isReply
-                        ? Text(
-                            widget.message,
-                            style: TextStyle(
-                              color: widget.isMe ? Colors.white : Colors.black,
-                            ),
-                          )
-                        : Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              widget.message,
-                              style: TextStyle(
-                                color:
-                                    widget.isMe ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          )
-                    : Image.network(
-                        widget.message,
-                        height: 130,
-                        width: MediaQuery.of(context).size.width / 1.3,
-                        fit: BoxFit.cover,
-                      ),
-              ),
-            ],
-          ),
-        ),
         Padding(
-          padding: widget.isMe
-              ? const EdgeInsets.only(
-                  right: 10,
-                  bottom: 10.0,
-                )
-              : const EdgeInsets.only(
-                  left: 10,
-                  bottom: 10.0,
-                ),
-          child: Text(
-            widget.time,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 10.0,
-            ),
-          ),
+          padding:
+              EdgeInsets.symmetric(vertical: 0.006.sh, horizontal: 0.012.sw),
+          child: message.is_mine == 'true'
+              ? _buildSentMessage(context)
+              : _buildReceivedMessage(context),
         ),
       ],
+    );
+  }
+
+  Widget _buildSentMessage(BuildContext context) {
+    Color sendColor = const Color(0xff0084FF);
+    return Container(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 3 / 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: sendColor,
+                borderRadius: BorderRadius.circular(25.0),
+              ),
+              child: Text(
+                message.content.trim(),
+                style: const TextStyle(fontSize: 18.0, color: Colors.white),
+              ),
+            ),
+            Icon(
+              message.receipt == 'pending'
+                  ? PhosphorIcons.clock
+                  : message.receipt == 'sent'
+                      ? PhosphorIcons.check
+                      : PhosphorIcons.checks_bold,
+              color: message.receipt == 'read' ? Colors.blue : Colors.grey,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReceivedMessage(BuildContext context) {
+    Color receivedColor = const Color(0x99eeeeee);
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: <Widget>[
+          // isMe
+          //     ? Padding(
+          //         padding: const EdgeInsets.only(right: 8.0),
+          //         child: CircleAvatar(
+          //           backgroundImage: NetworkImage(chat.from.profilePicture),
+          //           radius: 12.0,
+          //         ),
+          //       )
+          //     : Container(
+          //         width: 32.0,
+          //         height: 24.0,
+          //       ),
+          Container(
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 3 / 4),
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              color: receivedColor,
+              borderRadius: BorderRadius.circular(25.0),
+            ),
+            child: Text(
+              message.content.trim(),
+              style: const TextStyle(fontSize: 18.0, color: Colors.black),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

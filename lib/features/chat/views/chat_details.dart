@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mysocial_app/features/chat/providers/conversation_provider.dart';
-
-import 'package:mysocial_app/features/chat/widgets/colors.dart';
+import 'package:mysocial_app/features/chat/widgets/chat_bubble.dart';
 import 'package:provider/provider.dart';
 
 class ChatDetailPage extends StatefulWidget {
@@ -21,87 +21,95 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     context.read<ChatsProvider>().getMessages(chatId: widget.chatId);
   }
 
-  final TextEditingController _sendMessageController = TextEditingController();
+  final TextEditingController _textEditingController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: grey.withOpacity(0.2),
-        elevation: 0,
-        leading: GestureDetector(
-            onTap: () {
-              print('xxxxx');
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.arrow_back_ios,
-              color: primary,
-            )),
-        title: Row(
-          children: <Widget>[
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                      image: NetworkImage(
-                          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"),
-                      fit: BoxFit.cover)),
-            ),
-            const SizedBox(
-              width: 15,
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                const Text(
-                  "Alina",
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold, color: black),
-                ),
-                const SizedBox(
-                  height: 3,
-                ),
-                Text(
-                  "Active now",
-                  style: TextStyle(color: black.withOpacity(0.4), fontSize: 14),
-                )
-              ],
-            )
-          ],
-        ),
-        actions: <Widget>[
-          const Icon(
-            PhosphorIcons.phone,
-            color: primary,
-            size: 32,
-          ),
-          const SizedBox(
-            width: 15,
-          ),
-          const Icon(
-            PhosphorIcons.video_camera,
-            color: primary,
-            size: 35,
-          ),
-          const SizedBox(
-            width: 8,
-          ),
+      appBar: appBar(),
+      body: getBody(),
+      bottomSheet: getBottom(),
+    );
+  }
+
+  PreferredSizeWidget appBar() {
+    return AppBar(
+      backgroundColor: Colors.white.withOpacity(0.2),
+      elevation: 0,
+      leading: GestureDetector(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.green,
+          )),
+      title: Row(
+        children: <Widget>[
           Container(
-            width: 13,
-            height: 13,
-            decoration: BoxDecoration(
-                color: online,
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white38)),
+                image: DecorationImage(
+                    image: NetworkImage(
+                        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"),
+                    fit: BoxFit.cover)),
           ),
           const SizedBox(
             width: 15,
           ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Text(
+                "Alina",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
+              ),
+              const SizedBox(
+                height: 3,
+              ),
+              Text(
+                "Online",
+                style: TextStyle(
+                    color: Colors.black.withOpacity(0.4), fontSize: 14),
+              )
+            ],
+          )
         ],
       ),
-      body: getBody(),
+      actions: <Widget>[
+        const Icon(
+          PhosphorIcons.phone,
+          color: Colors.green,
+          size: 32,
+        ),
+        const SizedBox(
+          width: 15,
+        ),
+        const Icon(
+          PhosphorIcons.video_camera,
+          color: Colors.green,
+          size: 35,
+        ),
+        const SizedBox(
+          width: 8,
+        ),
+        Container(
+          width: 13,
+          height: 13,
+          decoration: BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white38)),
+        ),
+        const SizedBox(
+          width: 15,
+        ),
+      ],
     );
   }
 
@@ -112,185 +120,93 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           children: [
             Expanded(
               child: ListView(
+                controller: _scrollController,
+                //reverse: true,
                 padding: const EdgeInsets.only(
-                    right: 20, left: 20, top: 20, bottom: 80),
+                  right: 20,
+                  left: 20,
+                  top: 20,
+                  bottom: 80,
+                ),
                 children: List.generate(state.messages.length, (index) {
                   return ChatBubble(
-                    isMe: state.messages[index].is_mine == 'true',
-                    messageType: 1,
-                    message: state.messages[index].content,
+                    message: state.messages[index],
                   );
                 }),
               ),
             ),
-            Container(
-              height: 80,
-              width: double.infinity,
-              decoration: BoxDecoration(color: grey.withOpacity(0.2)),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-                child: Row(
-                  children: <Widget>[
-                    const Icon(
-                      Icons.add_circle,
-                      size: 35,
-                      color: primary,
-                    ),
-                    Expanded(
-                      child: Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                            color: grey,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: TextField(
-                            cursorColor: black,
-                            controller: _sendMessageController,
-                            decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: "Aa",
-                                suffixIcon: Icon(
-                                  Icons.face,
-                                  color: primary,
-                                  size: 35,
-                                )),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
           ],
         );
       },
     );
   }
-}
 
-class ChatBubble extends StatelessWidget {
-  final bool isMe;
-  final String message;
-  final int messageType;
-  const ChatBubble({
-    Key key,
-    this.isMe,
-    this.message,
-    this.messageType,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    if (isMe) {
-      return Padding(
-        padding: const EdgeInsets.all(1.0),
+  Widget getBottom() {
+    return Container(
+      height: 65,
+      width: double.infinity,
+      decoration: const BoxDecoration(color: Colors.white),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            Flexible(
+            Expanded(
               child: Container(
+                height: 50,
                 decoration: BoxDecoration(
-                    color: primary, borderRadius: getMessageType(messageType)),
-                child: Padding(
-                  padding: const EdgeInsets.all(13.0),
-                  child: Text(
-                    message,
-                    style: const TextStyle(color: white, fontSize: 17),
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(50)),
+                child: TextFormField(
+                  onChanged: (text) {},
+                  // textInputAction: TextInputAction.newline,
+                  // keyboardType: TextInputType.multiline,
+                  // maxLines: 5,
+                  cursorColor: Colors.black,
+                  controller: _textEditingController,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    prefixIcon: Icon(
+                      PhosphorIcons.smiley,
+                      color: Colors.green,
+                      size: 25,
+                    ),
+                    hintText: "Say Something...",
+                    suffixIcon: Icon(
+                      PhosphorIcons.paperclip,
+                      color: Colors.green,
+                      size: 25,
+                    ),
                   ),
                 ),
               ),
-            )
-          ],
-        ),
-      );
-    } else {
-      return Padding(
-        padding: const EdgeInsets.all(1.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Flexible(
-              child: Container(
-                decoration: BoxDecoration(
-                    color: grey, borderRadius: getMessageType(messageType)),
-                child: Padding(
-                  padding: const EdgeInsets.all(13.0),
-                  child: Text(
-                    message,
-                    style: const TextStyle(color: black, fontSize: 17),
-                  ),
-                ),
+            ),
+            SizedBox(
+              width: 0.03.sw,
+            ),
+            GestureDetector(
+              onTap: () => _sendNewMessage(),
+              child: Icon(
+                PhosphorIcons.paper_plane_right,
+                size: 28.sp,
+                color: Colors.green,
               ),
-            )
+            ),
           ],
         ),
-      );
-    }
+      ),
+    );
   }
 
-  getMessageType(messageType) {
-    if (isMe) {
-      // start message
-      if (messageType == 1) {
-        return const BorderRadius.only(
-            topRight: Radius.circular(30),
-            bottomRight: Radius.circular(5),
-            topLeft: Radius.circular(30),
-            bottomLeft: Radius.circular(30));
-      }
-      // middle message
-      else if (messageType == 2) {
-        return const BorderRadius.only(
-            topRight: Radius.circular(5),
-            bottomRight: Radius.circular(5),
-            topLeft: Radius.circular(30),
-            bottomLeft: Radius.circular(30));
-      }
-      // end message
-      else if (messageType == 3) {
-        return const BorderRadius.only(
-            topRight: Radius.circular(5),
-            bottomRight: Radius.circular(30),
-            topLeft: Radius.circular(30),
-            bottomLeft: Radius.circular(30));
-      }
-      // standalone message
-      else {
-        return const BorderRadius.all(Radius.circular(30));
-      }
-    }
-    // for sender bubble
-    else {
-      // start message
-      if (messageType == 1) {
-        return const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            bottomLeft: Radius.circular(5),
-            topRight: Radius.circular(30),
-            bottomRight: Radius.circular(30));
-      }
-      // middle message
-      else if (messageType == 2) {
-        return const BorderRadius.only(
-            topLeft: Radius.circular(5),
-            bottomLeft: Radius.circular(5),
-            topRight: Radius.circular(30),
-            bottomRight: Radius.circular(30));
-      }
-      // end message
-      else if (messageType == 3) {
-        return const BorderRadius.only(
-            topLeft: Radius.circular(5),
-            bottomLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-            bottomRight: Radius.circular(30));
-      }
-      // standalone message
-      else {
-        return const BorderRadius.all(Radius.circular(30));
-      }
-    }
+  _sendNewMessage() async {
+    if (_textEditingController.text.trim().isEmpty) return;
+    Map<String, dynamic> data = {
+      'content': _textEditingController.text.trim().toString(),
+      'receiver_id': 9,
+      'time': DateTime.now().toString()
+    };
+    await context
+        .read<ChatsProvider>()
+        .sendMessage(message: data, chatId: widget.chatId);
+    _textEditingController.text = '';
   }
 }

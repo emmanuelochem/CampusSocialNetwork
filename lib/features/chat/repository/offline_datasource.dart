@@ -1,33 +1,19 @@
 import 'dart:developer';
 
-import 'package:mysocial_app/features/chat/database/repository/online_datasource.dart';
+import 'package:mysocial_app/features/chat/repository/online_datasource.dart';
 import 'package:mysocial_app/features/chat/models/chat_model.dart';
 import 'package:mysocial_app/features/chat/models/message_model.dart';
 import 'package:sqflite/sqflite.dart';
 
-abstract class IDatasource {
-  //Future<void> importChats(List<ChatModel> chat);
-  Future<void> addChat(ChatModel chat);
-  Future<void> addMessage(MessagesModel message);
-  Future<ChatModel> findChat(String chatId);
-  Future<List<ChatModel>> findAllChats();
-  Future<void> updateMessage(MessagesModel message);
-  Future<List<MessagesModel>> findMessages(int chatId);
-  Future<void> deleteChat(String chatId);
-  Future<void> updateMessageReceipt(String messageId);
-}
-
-class OfflineDatasource extends OnlineDatasource implements IDatasource {
+class OfflineDatasource extends OnlineDatasource {
   final Database _db;
-
   OfflineDatasource(this._db);
 
-  @override
   Future<List<ChatModel>> findAllChats() async {
     var offlineData = await _db.transaction((txn) async {
       final offlineChats = await txn.query('chats', orderBy: 'created_at DESC');
       if (offlineChats.isEmpty) return [];
-      log('0---------OFFLINE DATA SOURCE-------------0');
+      log('--OFFLINE DATA SOURCE--');
       return await Future.wait(
         offlineChats.map<Future<ChatModel>>(
           (row) async {
@@ -53,7 +39,7 @@ class OfflineDatasource extends OnlineDatasource implements IDatasource {
     });
 
     if (offlineData.isEmpty) {
-      log('0---------ONLINE DATA SOURCE-------------0');
+      log('--ONLINE DATA SOURCE--');
       var onlineData = await findOnlineChats();
       await Future.wait(onlineData.map<Future<void>>((conversation) async {
         //debugPrint(conversation.toString());
@@ -67,8 +53,6 @@ class OfflineDatasource extends OnlineDatasource implements IDatasource {
     return offlineData;
   }
 
-  //insert conversation
-  @override
   Future<void> addChat(ChatModel conversation) async {
     return await _db.transaction((txn) async {
       await txn.insert(
@@ -79,10 +63,9 @@ class OfflineDatasource extends OnlineDatasource implements IDatasource {
     });
   }
 
-  @override
-  Future<void> addMessage(MessagesModel message) async {
-    await _db.transaction((txn) async {
-      await txn.insert('messages', message.toMap(),
+  Future<int> addMessage(MessagesModel message) async {
+    return await _db.transaction((txn) async {
+      return await txn.insert('messages', message.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace);
       // await txn.update(
       //     'chats', {'updated_at': message.message.timestamp.toString()},
@@ -90,21 +73,70 @@ class OfflineDatasource extends OnlineDatasource implements IDatasource {
     });
   }
 
-  @override
   Future<List<MessagesModel>> findMessages(int chatId) async {
     var listOfMaps = await _db.query(
       'messages',
       where: 'chat_id = ?',
       whereArgs: [chatId],
     );
-    print(listOfMaps);
+    //log(listOfMaps.toString());
     return listOfMaps
         .map<MessagesModel>((map) => MessagesModel.fromOfflineMap(map))
         .toList();
   }
 
-  @override
-  Future<ChatModel> findChat(String chatId) async {
+  Future<MessagesModel> addNewChat(MessagesModel message) async {
+    if (!await _isExistingChat(message.chat_id)) {
+      final chat = ChatModel(chat_id: message.chat_id, membersId: [
+        {'id': message.receiver_id}
+      ]);
+      await createNewChat(chat);
+    }
+    var msgID = await addMessage(message);
+    //log(msgID.toString());
+    return await getMessageByID(msgID);
+  }
+
+  Future<MessagesModel> getMessageByID(int messageId) async {
+    final listOfMaps = await _db.transaction((txn) async {
+      return await txn.query(
+        'messages',
+        where: 'id = ?',
+        whereArgs: [messageId],
+      );
+    });
+    //log(listOfMaps.toString());
+    return MessagesModel.fromOfflineMap(listOfMaps.first);
+  }
+
+  Future<bool> _isExistingChat(int chatId) async {
+    final listOfChatMaps = await _db.transaction((txn) async {
+      return await txn.query(
+        'chats',
+        where: 'chat_id = ?',
+        whereArgs: [chatId],
+        limit: 1,
+      );
+    });
+    return listOfChatMaps.isEmpty ? false : true;
+  }
+
+  Future<void> createNewChat(ChatModel chat) async {
+    await addChat(chat);
+  }
+
+  Future<List<ChatModel>> getNewChats() async {
+    log('0---------NEW ONLINE CHAT-------------0');
+    var newChats = await getOnlineNewChats();
+    if (newChats.isNotEmpty) {
+      await Future.forEach(newChats, (ChatModel chat) async {
+        await addNewChat(chat.mostRecent);
+      });
+    }
+    return newChats;
+  }
+
+  Future<ChatModel> findChat(int chatId) async {
     return await _db.transaction((txn) async {
       final listOfChatMaps = await txn.query(
         'chats',
@@ -131,29 +163,47 @@ class OfflineDatasource extends OnlineDatasource implements IDatasource {
     });
   }
 
-  @override
-  Future<void> updateMessage(MessagesModel message) async {
-    await _db.update('messages', message.toMap(),
-        where: 'id = ?',
-        whereArgs: [message.id],
-        conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<MessagesModel> updateMessage(MessagesModel message) async {
+    await _db.update(
+      'messages',
+      message.toMap(),
+      where: 'message_uuid = ?',
+      whereArgs: [message.message_uuid],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    return await getMessageByUUID(message.message_uuid);
   }
 
-  @override
+  Future<MessagesModel> getMessageByUUID(String messageUuId) async {
+    final listOfMaps = await _db.transaction((txn) async {
+      return await txn.query(
+        'messages',
+        where: 'message_uuid = ?',
+        whereArgs: [messageUuId],
+      );
+    });
+    //log(listOfMaps.toString());
+    return MessagesModel.fromOfflineMap(listOfMaps.first);
+  }
+
   Future<void> deleteChat(String chatId) async {
     final batch = _db.batch();
     batch.delete('messages', where: 'chat_id = ?', whereArgs: [chatId]);
-    batch.delete('chats', where: 'id = ?', whereArgs: [chatId]);
+    batch.delete('chats', where: 'chat_id = ?', whereArgs: [chatId]);
     await batch.commit(noResult: true);
   }
 
-  @override
-  Future<void> updateMessageReceipt(String messageId) {
-    // TODO: implement updateMessageReceipt
-    throw UnimplementedError();
+  Future<void> updateMsg(MessagesModel message) async {
+    return await _db.update(
+      'messages',
+      message.toMap(),
+      where: 'uuid = ?',
+      whereArgs: [message.id],
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  // @override
+  //
   // Future<void> importChats(List<ChatModel> chats) async {
   //     await Future.wait(chats.map<Future<void>>((conversation) async {
   //       return await txn.insert(

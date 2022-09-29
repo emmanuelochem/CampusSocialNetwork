@@ -67,7 +67,7 @@ class DatabaseClient {
         .execute(
           """
     CREATE TABLE ${UserFields.usersTable} (
-  ${UserFields.id} ${TableBuilder.integerNull},
+  ${UserFields.id} ${TableBuilder.integerPrimaryKey},
   ${UserFields.userId} ${TableBuilder.textNull},
   ${UserFields.nickname} ${TableBuilder.textNull},
   ${UserFields.phone} ${TableBuilder.textNull},
@@ -78,8 +78,6 @@ class DatabaseClient {
   ${UserFields.levels} ${TableBuilder.textNull},
   ${UserFields.departments} ${TableBuilder.textNull}
   );
-  ALTER TABLE `${UserFields.usersTable}`
-  ADD PRIMARY KEY (`${UserFields.id}`);
 """,
         )
         .then((_) => log('users table created.'))
@@ -92,14 +90,12 @@ class DatabaseClient {
         .execute(
           """
     CREATE TABLE ${ChatFields.TableName} (
-  ${ChatFields.id} ${TableBuilder.integerNull},
+  ${ChatFields.id} ${TableBuilder.integerPrimaryKey},
   ${ChatFields.chatId} ${TableBuilder.integer},
   ${ChatFields.status} ${TableBuilder.text},
    ${ChatFields.members} ${TableBuilder.textNull},
   ${ChatFields.createdAt} ${TableBuilder.time}
   );
-  ALTER TABLE `${ChatFields.TableName}`
-    ADD AUTO_INCREMENT PRIMARY KEY (`${ChatFields.id}`);
   ALTER TABLE `${ChatFields.TableName}`
     ADD UNIQUE (${ChatFields.chatId});
 """,
@@ -114,9 +110,10 @@ class DatabaseClient {
         .execute(
           """
       CREATE TABLE ${MessagesFields.TableName} (
-  ${MessagesFields.id} ${TableBuilder.integerNull},
+  ${MessagesFields.id} ${TableBuilder.integerPrimaryKey},
   ${MessagesFields.conversationId} ${TableBuilder.integer},
-   ${MessagesFields.messageId} ${TableBuilder.integer},
+  ${MessagesFields.messageId} ${TableBuilder.integerNull},
+  ${MessagesFields.messageUuid} ${TableBuilder.text},
   ${MessagesFields.senderId} ${TableBuilder.integer},
   ${MessagesFields.receiverId} ${TableBuilder.integer},
   ${MessagesFields.content} ${TableBuilder.text},
@@ -126,8 +123,6 @@ class DatabaseClient {
   ${MessagesFields.createdAt} ${TableBuilder.time},
   ${MessagesFields.updatedAt} ${TableBuilder.time}
       );
-    ALTER TABLE `${MessagesFields.TableName}`
-  ADD AUTO_INCREMENT PRIMARY KEY (`${MessagesFields.id}`)
   """,
         )
         .then((_) => log('messages table created'))

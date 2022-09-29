@@ -6,6 +6,7 @@ class MessagesFields {
   static const String id = 'id';
   static const String conversationId = 'chat_id';
   static const String messageId = 'message_id';
+  static const String messageUuid = 'message_uuid';
   static const String senderId = 'sender_id';
   static const String receiverId = 'receiver_id';
   static const String content = 'content';
@@ -20,6 +21,7 @@ class MessagesModel {
   int id;
   int chat_id;
   int message_id;
+  String message_uuid;
   int sender_id;
   int receiver_id;
   String content;
@@ -33,6 +35,7 @@ class MessagesModel {
     this.id,
     this.chat_id,
     this.message_id,
+    this.message_uuid,
     this.sender_id,
     this.receiver_id,
     this.content,
@@ -47,6 +50,7 @@ class MessagesModel {
     int id,
     int chat_id,
     int message_id,
+    String message_uuid,
     int sender_id,
     int receiver_id,
     String content,
@@ -59,7 +63,7 @@ class MessagesModel {
     return MessagesModel(
       id: id ?? this.id,
       chat_id: chat_id ?? this.chat_id,
-      message_id: message_id ?? this.message_id,
+      message_uuid: message_uuid ?? this.message_uuid,
       sender_id: sender_id ?? this.sender_id,
       receiver_id: receiver_id ?? this.receiver_id,
       content: content ?? this.content,
@@ -73,9 +77,10 @@ class MessagesModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
+      //'id': id,
       'chat_id': chat_id,
       'message_id': message_id,
+      'message_uuid': message_uuid,
       'sender_id': sender_id,
       'receiver_id': receiver_id,
       'content': content,
@@ -92,6 +97,7 @@ class MessagesModel {
       //id: map['id'] as int,
       chat_id: map['chat_id'] as int,
       message_id: map['id'] as int,
+      message_uuid: map['message_uuid'] as String,
       sender_id: map['sender_id'] as int,
       receiver_id: map['receiver_id'] as int,
       content: map['content'] as String,
@@ -108,6 +114,7 @@ class MessagesModel {
       id: map['id'] as int,
       chat_id: map['chat_id'] as int,
       message_id: map['message_id'] as int,
+      message_uuid: map['message_uuid'] as String,
       sender_id: map['sender_id'] as int,
       receiver_id: map['receiver_id'] as int,
       content: map['content'] as String,
@@ -126,7 +133,7 @@ class MessagesModel {
 
   @override
   String toString() {
-    return 'MessagesModel(id: $id, chat_id: $chat_id, message_id: $message_id, sender_id: $sender_id, receiver_id: $receiver_id, content: $content, receipt: $receipt, is_deleted: $is_deleted, created_at: $created_at, updated_at: $updated_at, is_mine: $is_mine)';
+    return 'MessagesModel(id: $id, chat_id: $chat_id, message_id: $message_id, message_uuid: $message_uuid,sender_id: $sender_id, receiver_id: $receiver_id, content: $content, receipt: $receipt, is_deleted: $is_deleted, created_at: $created_at, updated_at: $updated_at, is_mine: $is_mine)';
   }
 
   @override
@@ -136,6 +143,7 @@ class MessagesModel {
     return other.id == id &&
         other.chat_id == chat_id &&
         other.message_id == message_id &&
+        other.message_uuid == message_uuid &&
         other.sender_id == sender_id &&
         other.receiver_id == receiver_id &&
         other.content == content &&
@@ -151,6 +159,7 @@ class MessagesModel {
     return id.hashCode ^
         chat_id.hashCode ^
         message_id.hashCode ^
+        message_uuid.hashCode ^
         sender_id.hashCode ^
         receiver_id.hashCode ^
         content.hashCode ^

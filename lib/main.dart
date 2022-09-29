@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mysocial_app/activity_dashboard.dart';
-import 'package:mysocial_app/composition_root.dart';
+import 'package:mysocial_app/app_routes.dart';
 import 'package:mysocial_app/core/utils/theme_light.dart';
 import 'package:mysocial_app/features/auth/providers/authDataProvider.dart';
-import 'package:mysocial_app/features/auth/view/loginPage.dart';
-import 'package:mysocial_app/features/auth/view/registerPage.dart';
-import 'package:mysocial_app/features/auth/view/welcomePage.dart';
 import 'package:mysocial_app/features/camera/providers/mediaDataProvider.dart';
 import 'package:mysocial_app/features/camera/providers/publishDataProvider.dart';
-import 'package:mysocial_app/features/camera/views/camera_screen.dart';
-import 'package:mysocial_app/features/camera/views/gallery_screen.dart';
 import 'package:mysocial_app/features/chat/providers/conversation_provider.dart';
 import 'package:mysocial_app/features/explore/providers/explore_provider.dart';
 import 'package:mysocial_app/features/profile/providers/profile_provider.dart';
@@ -18,17 +12,31 @@ import 'package:mysocial_app/features/timeline/providers/comments_provider.dart'
 import 'package:mysocial_app/features/timeline/providers/feeds_provider.dart';
 import 'package:provider/provider.dart';
 
+import 'app_config.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await CompositionRoot.configure();
-  final firstPage = await CompositionRoot.start();
+  //  await Firebase.initializeApp(
+  //     // options: const FirebaseOptions(
+  //     // apiKey: "AIzaSyB2oeTlaVcvKQg07AI_WmXdx5EjXR5eX0M",
+  //     // authDomain: "ajomoney-b221b.firebaseapp.com",
+  //     // databaseURL: "https://ajomoney-b221b.firebaseio.com",
+  //     // projectId: "ajomoney-b221b",
+  //     // storageBucket: "ajomoney-b221b.appspot.com",
+  //     // messagingSenderId: "1081822978310",
+  //     // appId: "1:1081822978310:web:c96b040b50428a8b8b3e87",
+  //     // measurementId: "G-0VKL4JCDMH"),
+  //     );
 
-  final _datasource = CompositionRoot.chatDataSource;
-  final _userService = CompositionRoot.userService;
-  final _localCache = CompositionRoot.localCache;
+  await AppConfig.configure();
+  final homePage = await AppConfig.start();
+  final _chatService = AppConfig.chatService;
+  final _userService = AppConfig.userService;
+  final _localCache = AppConfig.localCache;
+  final _socketService = AppConfig.socketService;
 
-  ChatsProvider conversationMessagesProvider =
-      ChatsProvider(_datasource, _userService, _localCache);
+  ChatsProvider _chatsProvider =
+      ChatsProvider(_chatService, _userService, _localCache, _socketService);
   MediaGalleryProvider mediaGalleryProvider = MediaGalleryProvider();
   PublishDataProvider publishDataProvider = PublishDataProvider();
   FeedState feedState = FeedState();
@@ -41,7 +49,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => authDataProvider),
-        ChangeNotifierProvider(create: (_) => conversationMessagesProvider),
+        ChangeNotifierProvider(create: (_) => _chatsProvider),
         ChangeNotifierProvider(create: (_) => mediaGalleryProvider),
         ChangeNotifierProvider(create: (_) => publishDataProvider),
         ChangeNotifierProvider(create: (_) => feedState),
@@ -49,7 +57,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => exploreProvider),
         ChangeNotifierProvider(create: (_) => profileProvider),
       ],
-      child: MyApp(firstPage: firstPage),
+      child: MyApp(firstPage: homePage),
     ),
   );
 }
@@ -74,44 +82,42 @@ class MyApp extends StatelessWidget {
             }
           },
           child: MaterialApp(
-              title: 'Social Community App',
-              theme: lightTheme,
-              home: firstPage,
-              routes: {
-                '/welcome': (context) => const WelcomePage(),
-                '/register': (context) => const RegisterPage(),
-                '/login': (context) => const LoginPage(),
-                '/home': (context) => const ActivityPage(),
-                '/camera': (context) => CameraScreen(),
-                '/gallery': (context) => GalleryScreen(),
-              }),
+            theme: lightTheme,
+            title: 'The Social Community',
+            home: AppSetup(firstPage: firstPage),
+            debugShowCheckedModeBanner: false,
+            onGenerateRoute: (settings) => generateRoute(settings),
+          ),
         );
       },
     );
   }
 }
 
+class AppSetup extends StatefulWidget {
+  final Widget firstPage;
+  const AppSetup({Key key, this.firstPage}) : super(key: key);
+  @override
+  State<AppSetup> createState() => _AppSetupState();
+}
 
-// class _KeepAlivePage extends StatefulWidget {
-//   const _KeepAlivePage({
-//     Key key,
-//     @required this.child,
-//   }) : super(key: key);
+class _AppSetupState extends State<AppSetup> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    // if (message.notification != null) {
+    //context.read<ChatsProvider>().offlineMessage(message.notification);
+    //   }
+    // });
+  }
 
-//   final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    return widget.firstPage;
+  }
+}
 
-//   @override
-//   _KeepAlivePageState createState() => _KeepAlivePageState();
-// }
-
-// class _KeepAlivePageState extends State<_KeepAlivePage>
-//     with AutomaticKeepAliveClientMixin {
-//   @override
-//   Widget build(BuildContext context) {
-//     super.build(context);
-//     return widget.child;
-//   }
-
-//   @override
-//   bool get wantKeepAlive => true;
-// }
+// WidgetsBinding.instance?.addPostFrameCallback((_) {
+//   });

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mysocial_app/features/chat/widgets/json.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 class StatusTab extends StatelessWidget {
+  const StatusTab({Key key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
@@ -28,11 +29,11 @@ class StatusTab extends StatelessWidget {
                                 Container(
                                   width: 70,
                                   height: 70,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                       shape: BoxShape.circle,
                                       image: DecorationImage(
-                                          image:
-                                              NetworkImage(profile[0]['img']),
+                                          image: NetworkImage(
+                                              'https://csn-test-bucket.s3.amazonaws.com/images/Lrm19kqvfDYhc1gbbldVf63eBVETSIWjrKrAAZvR.jpg'),
                                           fit: BoxFit.cover)),
                                 ),
                                 Positioned(
@@ -42,11 +43,12 @@ class StatusTab extends StatelessWidget {
                                     width: 20,
                                     height: 20,
                                     decoration: const BoxDecoration(
-                                        shape: BoxShape.circle, color: primary),
+                                        shape: BoxShape.circle,
+                                        color: Colors.green),
                                     child: const Center(
                                       child: Icon(
                                         Icons.add,
-                                        color: white,
+                                        color: Colors.white,
                                         size: 18,
                                       ),
                                     ),
@@ -87,12 +89,12 @@ class StatusTab extends StatelessWidget {
                             width: 38,
                             height: 38,
                             decoration: BoxDecoration(
-                                color: white.withOpacity(0.1),
+                                color: Colors.white.withOpacity(0.1),
                                 shape: BoxShape.circle),
                             child: const Center(
                               child: Icon(
                                 Icons.camera_alt,
-                                color: primary,
+                                color: Colors.green,
                                 size: 20,
                               ),
                             ),
@@ -104,12 +106,12 @@ class StatusTab extends StatelessWidget {
                             width: 38,
                             height: 38,
                             decoration: BoxDecoration(
-                                color: white.withOpacity(0.1),
+                                color: Colors.white.withOpacity(0.1),
                                 shape: BoxShape.circle),
                             child: const Center(
                               child: Icon(
                                 Icons.edit,
-                                color: primary,
+                                color: Colors.green,
                                 size: 20,
                               ),
                             ),
