@@ -4,15 +4,25 @@ import 'package:mysocial_app/features/chat/models/message_model.dart';
 import 'package:mysocial_app/features/chat/models/user_model.dart';
 
 class OnlineDatasource extends BaseApi {
-  Future<List<LocalUser>> fetchChatUser(List<int> ids) async {
-    String route = 'chats/find';
+  Future<UserModel> fetchChatUserOnline({int userId}) async {
+    // return null;
+    String route = 'chats/user/find';
     Map<String, dynamic> header = {};
-    Map<String, dynamic> data = {'ids[]': ids};
+    Map<String, dynamic> data = {'id': userId};
     var users = await httpPost(
         route: route, data: data, header: header, hasToken: true);
-    List userList = await users['data'];
-    return userList.map((e) => LocalUser.fromMap(e)).toList();
+    var userList = await users['data'];
+    return UserModel.fromOnlineMap(userList[0]);
   }
+  // Future<List<UserModel>> fetchChatUserOnline(List<int> ids) async {
+  //   String route = 'chats/find';
+  //   Map<String, dynamic> header = {};
+  //   Map<String, dynamic> data = {'ids[]': ids};
+  //   var users = await httpPost(
+  //       route: route, data: data, header: header, hasToken: true);
+  //   List userList = await users['data'];
+  //   return userList.map((e) => UserModel.fromMap(e)).toList();
+  // }
 
   Future<List<ChatModel>> findOnlineChats() async {
     String route = 'chats';
@@ -20,9 +30,9 @@ class OnlineDatasource extends BaseApi {
     var resp = await httpGet(route: route, header: header, hasToken: true);
     List<ChatModel> chatsList = [];
     await resp['data'].forEach((element) {
-      chatsList.add(ChatModel.fromMap(element));
+      chatsList.add(ChatModel.fromOnlineMap(element));
     });
-    //print(chatsList);
+    //log(chatsList.toString());
     return chatsList;
   }
 
@@ -32,7 +42,7 @@ class OnlineDatasource extends BaseApi {
     var resp = await httpGet(route: route, header: header, hasToken: true);
     List<ChatModel> chatsList = [];
     await resp['data'].forEach((element) {
-      chatsList.add(ChatModel.fromMap(element));
+      chatsList.add(ChatModel.fromOnlineMap(element));
     });
     //print(chatsList);
     return chatsList;
@@ -43,7 +53,6 @@ class OnlineDatasource extends BaseApi {
     Map<String, dynamic> header = {};
     Map msg = await httpPost(
         route: route, data: message, header: header, hasToken: true);
-    //log(msg.toString());
     return MessagesModel.fromMap(msg['data']);
   }
 

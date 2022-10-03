@@ -29,9 +29,9 @@ class ChatsTab extends StatelessWidget {
                 (context, index) {
                   ChatModel conversationModel = state.conversations[index];
                   return ChatItem(
-                    key: Key('conversation-${conversationModel.id}'),
+                    key: Key('conversation-${conversationModel.chat_id}'),
                     chat_id: conversationModel.chat_id,
-                    members: conversationModel.users,
+                    user: conversationModel.users,
                     lastMessage: conversationModel.mostRecent,
                     createdAt: conversationModel.created_at,
                   );

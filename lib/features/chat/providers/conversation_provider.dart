@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mysocial_app/core/cache/local_cache.dart';
+import 'package:mysocial_app/features/chat/models/user_model.dart';
 import 'package:mysocial_app/features/chat/services/chat_service.dart';
 import 'package:mysocial_app/features/chat/services/websocket_service.dart';
 import 'package:mysocial_app/features/chat/models/message_model.dart';
@@ -26,9 +27,7 @@ class ChatsProvider with ChangeNotifier {
     await _socketService.connect();
     await _socketService.goOnline();
     //await _socketService.goOffline();
-    var res =
-        await _socketService.streamChat(channel: 'home', event: 'NewMessage');
-    print(res.toString());
+    _listenToChats();
   }
 
   List<ChatModel> _conversations = [];
@@ -37,9 +36,9 @@ class ChatsProvider with ChangeNotifier {
     _conversations = [];
     var chats = await _chatService.findAllChats();
     await Future.forEach(chats, (ChatModel chat) async {
-      final ids = chat.membersId.map<int>((e) => e.values.first).toList();
-      final users = await _chatService.fetchChatUser(ids);
-      chat.users = users;
+      // final ids = chat.users.map<int>((e) => e.values.first).toList();
+      // final users = await _chatService.fetchChatUser(ids);
+      // chat.users = users;
       _conversations.add(chat);
     });
     notifyListeners();
@@ -72,70 +71,63 @@ class ChatsProvider with ChangeNotifier {
     _msg.created_at = message['time'];
     _msg.updated_at = message['time'];
     _msg.is_mine = 'true';
-    var response = await _chatService.addNewChat(_msg);
-    // log(res.toString());
-    _messages.add(response);
-    notifyListeners();
-    var _onlineMsg = await _chatService.dispatchMessage(response.toMap());
-    var _localMsg = await _chatService.updateMessage(_onlineMsg);
-    var _item = _messages.indexWhere(
-        (element) => element.message_uuid == _localMsg.message_uuid);
-    _messages[_item].receipt = _localMsg.receipt;
-    notifyListeners();
-    //update chat list
+    MessagesModel response = await _chatService.addNewChat(_msg);
+    await updateMessages(response);
+    await updateLastMessages(response);
+    MessagesModel _onlineMsg =
+        await _chatService.dispatchMessage(response.toMap());
+    MessagesModel _localMsg = await _chatService.updateMessage(_onlineMsg);
+    await updateSentMessage(_localMsg);
   }
 
-  // Future<void> offlineMessage(Map msg) async {
-  //   MessagesModel offlineMsg = MessagesModel.fromMap(msg);
-  //   await _chatService.addMessage(offlineMsg);
-  //   //local notification
-  // }
+  void _listenToChats() {
+    _socketService.streamEvent.private('home').listen('NewMessage',
+        (event) async {
+      MessagesModel _msg = MessagesModel.fromJson(event['message']);
+      MessagesModel response = await _chatService.addNewChat(_msg);
+      if (_messages.isNotEmpty && _messages.last.chat_id == _msg.chat_id) {
+        //await updateMessages(response);
+      }
+      await updateLastMessages(response);
+    });
+  }
 
-  // Map data = jsonDecode(res['message']);
-  // MessagesModel _message = MessagesModel.fromMap(data);
-  //save to offline db
-  // await _chatService.addMessage(_message);
-  //get the refresh the particular conversation
+  Future updateSentMessage(MessagesModel msg) {
+    var _item = _messages
+        .indexWhere((element) => element.message_uuid == msg.message_uuid);
+    _messages[_item].receipt = msg.receipt;
+    notifyListeners();
+    return null;
+  }
 
-  // message.body = data['content'];
-  // message.userId = data['sender_id'];
-  // _messages.add(message);
-  // for (int i = 0; i < conversations.length; i++) {
-  //   if (conversations[i].id == data['conversation_id']) {
-  //     _conversations[i].last_message = data;
-  //     _conversations[i].created_at = data['created_at'];
-  //     notifyListeners();
-  //     //send a reply back to the server that it has been delivered
-  //   }
-  // }
-  //notifyListeners();
+  Future updateMessages(MessagesModel msg) {
+    _messages.add(msg);
+    notifyListeners();
+    return null;
+  }
 
-//   Future<void> fetchOnlineChats() async {
-// //background service
-//     var newChats = await _chatService.getNewChats();
-//     if (newChats.isNotEmpty) {
-//       return await getChats();
-//     }
-//   }
+  Future updateLastMessages(MessagesModel msg) async {
+    for (int i = 0; i < conversations.length; i++) {
+      if (conversations[i].chat_id == msg.chat_id) {
+        _conversations[i].mostRecent = msg;
+        _conversations[i].created_at = msg.created_at;
+        notifyListeners();
+        //send a reply back to the server that it has been delivered
+        // await sendReadReceipt();
+      }
+    }
+    return null;
+  }
 
-  // Future<MessagesModel> sendMessage(String body, int conversationId) async {
-  //   var response = await _messagesService.storeMessagte(body, conversationId);
-  //   if (response.statusCode == 200) {
-  //     var data = jsonDecode(response.body);
-  //     MessagesModel message = MessagesModel();
-  //     message.body = data['data']['body'];
-  //     message.userId = data['data']['user_id'];
-  //     for (int i = 0; i < conversations.length; i++) {
-  //       if (conversations[i].id == conversationId) {
-  //         //conversations[i].last_message = body;
-  //         conversations[i].created_at = data['data']['created_at'];
-  //       }
-  //     }
-  //     notifyListeners();
-  //     return message;
-  //   } else {
-  //     return null;
-  //   }
-  // }
+  Future sendReadReceipt() {
+    return null;
+  }
 
+  UserModel _activeChatUser;
+  UserModel get activeChatUser => _activeChatUser;
+  Future<UserModel> getActiveChatUSer({int userId}) async {
+    _activeChatUser = await _chatService.getUserByID(userId: userId);
+    notifyListeners();
+    return _activeChatUser;
+  }
 }

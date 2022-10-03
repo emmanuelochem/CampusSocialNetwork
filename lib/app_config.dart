@@ -8,7 +8,6 @@ import 'package:mysocial_app/core/cache/local_cache.dart';
 import 'package:mysocial_app/features/auth/view/welcomePage.dart';
 import 'package:mysocial_app/features/chat/services/chat_service.dart';
 import 'package:mysocial_app/features/chat/services/websocket_service.dart';
-import 'package:mysocial_app/features/chat/models/user_model.dart';
 import 'package:mysocial_app/features/chat/database/db_factory.dart';
 import 'package:mysocial_app/features/chat/services/user_service.dart';
 
@@ -29,7 +28,7 @@ class AppConfig {
   static SocketService get socketService => _socketService;
 
   static configure() async {
-    //await DatabaseClient.instance.removeDatabase();
+    // await DatabaseClient.instance.removeDatabase();
     _db = await DatabaseClient.instance.database;
     // await _db.delete('chats');
     // await _db.delete('messages');
@@ -47,14 +46,16 @@ class AppConfig {
 
   static Future<Widget> start() async {
     final Map user = await _localCache.fetch('USER');
-    return user.isEmpty ? OnboardingUi() : HomeUi(LocalUser.fromMap(user));
+    //parse it to offline user model
+    //save user account to local db after registration
+    return user.isEmpty ? OnboardingUi() : HomeUi();
   }
 
   static Widget OnboardingUi() {
     return const WelcomePage();
   }
 
-  static Widget HomeUi(LocalUser me) {
+  static Widget HomeUi() {
     return const ActivityPage();
   }
 }

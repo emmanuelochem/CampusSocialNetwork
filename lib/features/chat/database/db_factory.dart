@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:mysocial_app/features/chat/models/chat_model.dart';
+import 'package:mysocial_app/features/chat/models/chat_user_relation_table.dart';
 import 'package:mysocial_app/features/chat/models/message_model.dart';
 import 'package:mysocial_app/features/chat/models/user_model.dart';
 import 'package:path/path.dart';
@@ -58,6 +59,7 @@ class DatabaseClient {
   void populateDb(Database db, int version) async {
     await _createUserTable(db);
     await _createChatTable(db);
+    await _createChatUserRelationTable(db);
     await _createMessagesTable(db);
   }
 
@@ -68,15 +70,18 @@ class DatabaseClient {
           """
     CREATE TABLE ${UserFields.usersTable} (
   ${UserFields.id} ${TableBuilder.integerPrimaryKey},
-  ${UserFields.userId} ${TableBuilder.textNull},
+  ${UserFields.userId} ${TableBuilder.integerNull},
   ${UserFields.nickname} ${TableBuilder.textNull},
   ${UserFields.phone} ${TableBuilder.textNull},
   ${UserFields.photo} ${TableBuilder.textNull},
+  ${UserFields.gender} ${TableBuilder.textNull},
   ${UserFields.is_self} ${TableBuilder.textNull},
   ${UserFields.is_followed} ${TableBuilder.textNull},
   ${UserFields.is_crush} ${TableBuilder.textNull},
-  ${UserFields.levels} ${TableBuilder.textNull},
-  ${UserFields.departments} ${TableBuilder.textNull}
+  ${UserFields.level_id} ${TableBuilder.integerNull},
+  ${UserFields.level_name} ${TableBuilder.textNull},
+  ${UserFields.department_id} ${TableBuilder.integerNull},
+  ${UserFields.department_name} ${TableBuilder.textNull}
   );
 """,
         )
@@ -102,6 +107,22 @@ class DatabaseClient {
         )
         .then((_) => log('conversations table created.'))
         .catchError((e) => log('error creating conversations table: $e'));
+  }
+
+  _createChatUserRelationTable(Database db) async {
+    log('creating chat relationship table.');
+    await db
+        .execute(
+          """
+    CREATE TABLE ${ChatUserRelationFields.TableName} (
+  ${ChatUserRelationFields.id} ${TableBuilder.integerPrimaryKey},
+  ${ChatUserRelationFields.chatId} ${TableBuilder.integer},
+  ${ChatUserRelationFields.userId} ${TableBuilder.integer}
+  );
+""",
+        )
+        .then((_) => log('chat relationship table created.'))
+        .catchError((e) => log('error creating chat relationship table: $e'));
   }
 
   _createMessagesTable(Database db) async {

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mysocial_app/features/auth/view/loginPage.dart';
 import 'package:mysocial_app/features/auth/view/registerPage.dart';
@@ -40,8 +41,16 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
       break;
     default:
-      return MaterialPageRoute(
-        builder: (context) => const WelcomePage(),
-      );
+      return _errorRoute();
   }
+}
+
+Route<dynamic> _errorRoute() {
+  return CupertinoPageRoute(builder: (_) {
+    return Scaffold(
+        appBar: AppBar(title: const Text("Error")),
+        body: const Center(
+          child: Text("Page Not Found"),
+        ));
+  });
 }

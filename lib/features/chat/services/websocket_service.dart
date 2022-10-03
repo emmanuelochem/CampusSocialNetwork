@@ -76,9 +76,6 @@ class SocketService {
   }
 
   Future goOnline() async {
-    // _echo.private('home').listen('NewMessage', (event) async {
-    //   log(event.toString());
-    // });
     _echo.join('online-channel').here(
       (users) {
         log(users.toString());
@@ -101,12 +98,7 @@ class SocketService {
     _echo.leave('online-channel');
   }
 
-  Future<dynamic> streamChat({String channel, String event}) async {
-    var response = _echo.private(channel).listen(event, (event) async {
-      return event['message'];
-    });
-    return response;
+  Echo get streamEvent {
+    return _echo;
   }
-
-  Future<void> typing() async {}
 }

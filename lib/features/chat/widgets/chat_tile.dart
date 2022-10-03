@@ -10,7 +10,7 @@ class ChatItem extends StatefulWidget {
   int title;
   String createdAt;
   MessagesModel lastMessage;
-  List<LocalUser> members;
+  UserModel user;
   final bool isOnline;
   final int counter;
 
@@ -20,7 +20,7 @@ class ChatItem extends StatefulWidget {
     this.title,
     this.createdAt,
     this.lastMessage,
-    this.members,
+    this.user,
     this.isOnline = false,
     this.counter = 1,
   }) : super(key: key);
@@ -41,7 +41,7 @@ class _ChatItemState extends State<ChatItem> {
             children: <Widget>[
               CircleAvatar(
                 backgroundImage: NetworkImage(
-                  widget.members[0].photo,
+                  widget.user.photo,
                 ),
                 radius: 25,
               ),
@@ -71,7 +71,7 @@ class _ChatItemState extends State<ChatItem> {
           ),
           title: Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(widget.members[0].nickname,
+            child: Text(widget.user.nickname,
                 style: const TextStyle(
                   fontSize: 15,
                   color: Colors.black,
@@ -98,10 +98,17 @@ class _ChatItemState extends State<ChatItem> {
               const SizedBox(
                 width: 3,
               ),
-              Text(
-                widget.lastMessage.content,
-                style: TextStyle(
-                    fontSize: 14, color: Colors.black.withOpacity(0.4)),
+              Flexible(
+                child: Text(
+                  widget.lastMessage.content,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black.withOpacity(0.4),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ],
           ),
@@ -149,6 +156,7 @@ class _ChatItemState extends State<ChatItem> {
               MaterialPageRoute(
                   builder: (context) => ChatDetailPage(
                         chatId: widget.chat_id,
+                        user: widget.user,
                       )))),
     );
   }

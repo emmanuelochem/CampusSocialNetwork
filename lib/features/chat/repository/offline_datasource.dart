@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:mysocial_app/features/chat/models/chat_user_relation_table.dart';
+import 'package:mysocial_app/features/chat/models/user_model.dart';
 import 'package:mysocial_app/features/chat/repository/online_datasource.dart';
 import 'package:mysocial_app/features/chat/models/chat_model.dart';
 import 'package:mysocial_app/features/chat/models/message_model.dart';
@@ -17,18 +19,41 @@ class OfflineDatasource extends OnlineDatasource {
       return await Future.wait(
         offlineChats.map<Future<ChatModel>>(
           (row) async {
+            final chat = ChatModel.fromOfflineMap(row);
+            //find recipient
+            final chatRecipient = await txn.query(
+              'chat_user',
+              where: 'chat_id = ?',
+              whereArgs: [row['chat_id']],
+              limit: 1,
+            );
+            var usr = ChatUserRelation.fromMap(chatRecipient.first);
+            final onlUsr = await fetchChatUserOnline(userId: usr.user_id);
+            if (onlUsr != null) {
+              chat.users = onlUsr;
+            } else {
+              final offlineUser = await txn.query(
+                'users',
+                where: 'user_id = ?',
+                whereArgs: [usr.user_id],
+                limit: 1,
+              );
+              //log(offlineUser.toString());
+              chat.users = UserModel.fromOfflineMap(offlineUser.first);
+            }
+
+            //count unread messages
             final unread = Sqflite.firstIntValue(await txn.rawQuery(
                 'SELECT COUNT(*) FROM MESSAGES WHERE chat_id = ? AND receipt = ?',
                 [row['chat_id'], 'deliverred']));
+            chat.unread = unread;
 
+            //find last message
             final mostRecentMessage = await txn.query('messages',
                 where: 'chat_id = ?',
                 whereArgs: [row['chat_id']],
                 orderBy: 'created_at DESC',
                 limit: 1);
-
-            final chat = ChatModel.fromOfflineMap(row);
-            chat.unread = unread;
             if (mostRecentMessage.isNotEmpty) {
               chat.mostRecent = MessagesModel.fromMap(mostRecentMessage.first);
             }
@@ -40,17 +65,69 @@ class OfflineDatasource extends OnlineDatasource {
 
     if (offlineData.isEmpty) {
       log('--ONLINE DATA SOURCE--');
-      var onlineData = await findOnlineChats();
-      await Future.wait(onlineData.map<Future<void>>((conversation) async {
-        //debugPrint(conversation.toString());
-        return await addChat(conversation).then(
-          (value) async => await addMessage(conversation.mostRecent),
+      List<ChatModel> onlineData = await findOnlineChats();
+      await Future.wait(onlineData.map<Future<void>>((chat) async {
+        return await addChat(chat).then(
+          (value) async {
+            await addChatUser(chat.users);
+            await addChatUserRelation(chat);
+            await addMessage(chat.mostRecent);
+          },
         );
       }));
       return onlineData;
     }
 
     return offlineData;
+  }
+
+  // Future<UserModel> fetchChatUsers({int chatId}) async {
+  //   final chatRecipient = await _db.transaction((txn) async {
+  //     return await txn.query('chat_user',
+  //         where: 'chat_id = ?',
+  //         whereArgs: [chatId],
+  //         orderBy: 'created_at DESC',
+  //         limit: 1);
+  //   });
+  //   return UserModel.fromOnlineMap(chatRecipient.first);
+  // }
+
+  // Future<UserModel> fetchChatUserOffline({int userId}) async {
+  //   final chatRecipient = await _db.transaction((txn) async {
+  //     return await txn.query('users',
+  //         where: 'user_id = ?',
+  //         whereArgs: [userId],
+  //         //orderBy: 'created_at DESC',
+  //         limit: 1);
+  //   });
+  //   return UserModel.fromOnlineMap(chatRecipient.first);
+  // }
+
+  Future<int> addChatUserRelation(
+    ChatModel chat,
+  ) async {
+    //group chat loop support
+    //  await Future.forEach(chat.users, (ChatModel chat) async {
+    ChatUserRelation relation =
+        ChatUserRelation(chat_id: chat.chat_id, user_id: chat.users.user_id);
+    return await _db.transaction((txn) async {
+      return await txn.insert(
+        'chat_user',
+        relation.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+    // });
+  }
+
+  Future<void> addChatUser(UserModel user) async {
+    return await _db.transaction((txn) async {
+      await txn.insert(
+        'users',
+        user.toMap(),
+        //conflictAlgorithm: ConflictAlgorithm.rollback,
+      );
+    });
   }
 
   Future<void> addChat(ChatModel conversation) async {
@@ -87,13 +164,15 @@ class OfflineDatasource extends OnlineDatasource {
 
   Future<MessagesModel> addNewChat(MessagesModel message) async {
     if (!await _isExistingChat(message.chat_id)) {
-      final chat = ChatModel(chat_id: message.chat_id, membersId: [
-        {'id': message.receiver_id}
-      ]);
+      final chat = ChatModel(
+        chat_id: message.chat_id,
+        // users: [
+        //   {'id': message.receiver_id}
+        // ],
+      );
       await createNewChat(chat);
     }
     var msgID = await addMessage(message);
-    //log(msgID.toString());
     return await getMessageByID(msgID);
   }
 
@@ -123,6 +202,7 @@ class OfflineDatasource extends OnlineDatasource {
 
   Future<void> createNewChat(ChatModel chat) async {
     await addChat(chat);
+    //await addChatUserRelation(chat);
   }
 
   Future<List<ChatModel>> getNewChats() async {
@@ -154,7 +234,7 @@ class OfflineDatasource extends OnlineDatasource {
           whereArgs: [chatId],
           orderBy: 'created_at DESC',
           limit: 1);
-      final chat = ChatModel.fromMap(listOfChatMaps.first);
+      final chat = ChatModel.fromOnlineMap(listOfChatMaps.first);
       chat.unread = unread;
       if (mostRecentMessage.isNotEmpty) {
         chat.mostRecent = MessagesModel.fromMap(mostRecentMessage.first);
@@ -203,28 +283,16 @@ class OfflineDatasource extends OnlineDatasource {
     );
   }
 
-  //
-  // Future<void> importChats(List<ChatModel> chats) async {
-  //     await Future.wait(chats.map<Future<void>>((conversation) async {
-  //       return await txn.insert(
-  //         'chats',
-  //         conversation.toMap(),
-  //         conflictAlgorithm: ConflictAlgorithm.rollback,
-  //       );
-  //     }));
-  // return await _db.transaction((txn) async {
-  //   await txn.rawInsert(
-  //       'INSERT INTO chats (id, chat_id, status, created_at) VALUES (?, ?, ?, ?)',
-  //       [chat.id, chat.id, chat.status.value(), chat.created_at]);
-  // });
-  //   await _db.transaction((txn) async {
-  //     await Future.wait(chats.map<Future<void>>((conversation) async {
-  //       return await txn.insert(
-  //         'chats',
-  //         conversation.toMap(),
-  //         conflictAlgorithm: ConflictAlgorithm.rollback,
-  //       );
-  //     }));
-  //   });
-  //}
+  Future<UserModel> getUserByID({int userId}) async {
+    final listOfUser = await _db.transaction((txn) async {
+      return await txn.query(
+        'users',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+        limit: 1,
+      );
+    });
+    //log(listOfUser.toString());
+    return UserModel.fromOfflineMap(listOfUser.first);
+  }
 }

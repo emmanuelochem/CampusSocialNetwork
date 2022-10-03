@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mysocial_app/features/chat/models/user_model.dart';
 import 'package:mysocial_app/features/chat/providers/conversation_provider.dart';
 import 'package:mysocial_app/features/chat/widgets/chat_bubble.dart';
+import 'package:mysocial_app/features/chat/widgets/chat_details_appbar.dart';
+import 'package:mysocial_app/features/chat/widgets/chat_message_box.dart';
 import 'package:provider/provider.dart';
 
 class ChatDetailPage extends StatefulWidget {
   final int chatId;
+  final UserModel user;
 
-  const ChatDetailPage({Key key, @required this.chatId}) : super(key: key);
+  const ChatDetailPage({Key key, @required this.chatId, @required this.user})
+      : super(key: key);
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
 }
@@ -19,194 +23,143 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     // TODO: implement initState
     super.initState();
     context.read<ChatsProvider>().getMessages(chatId: widget.chatId);
+    // context.read<ChatsProvider>().getActiveChatUSer(userId: widget.user.user_id);
   }
 
-  final TextEditingController _textEditingController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar(),
-      body: getBody(),
-      bottomSheet: getBottom(),
-    );
-  }
+      body: Consumer<ChatsProvider>(
+        builder: (context, state, _) {
+          return CustomScrollView(
+            // controller: _scrollController,
+            physics: const ClampingScrollPhysics(),
+            slivers: [
+              ChatDetailsAppBar(user: widget.user),
 
-  PreferredSizeWidget appBar() {
-    return AppBar(
-      backgroundColor: Colors.white.withOpacity(0.2),
-      elevation: 0,
-      leading: GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.green,
-          )),
-      title: Row(
-        children: <Widget>[
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                    image: NetworkImage(
-                        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"),
-                    fit: BoxFit.cover)),
-          ),
-          const SizedBox(
-            width: 15,
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const Text(
-                "Alina",
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
+              // SliverList(
+              //   delegate: SliverChildBuilderDelegate(
+              //     (context, index) {
+              //       final message = state.messages[index];
+              //       return ChatBubble(
+              //         key: ValueKey('message-${message.message_uuid}'),
+              //         message: message,
+              //       );
+              //     },
+              //     childCount: state.messages.length,
+              //   ),
+              // ),
+              SliverFillRemaining(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(
+                          right: 20,
+                          left: 20,
+                          top: 20,
+                          bottom: 80,
+                        ),
+                        children: List.generate(
+                          1 + state.messages.length,
+                          (index) {
+                            if (index == 0) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  children: [
+                                    const SizedBox(
+                                      height: 15,
+                                    ),
+                                    CircleAvatar(
+                                        radius: 60.r,
+                                        backgroundImage: NetworkImage(
+                                          widget.user.photo,
+                                        )),
+                                    const SizedBox(
+                                      height: 15,
+                                    ),
+                                    Text(
+                                      widget.user.nickname,
+                                      style: const TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black),
+                                    ),
+                                    const SizedBox(
+                                      height: 3,
+                                    ),
+                                    Text(
+                                      widget.user.department_name,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black),
+                                    ),
+                                    const SizedBox(
+                                      height: 3,
+                                    ),
+                                    Text(
+                                      widget.user.level_name,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black54),
+                                    ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(25),
+                                        topRight: Radius.circular(25),
+                                        bottomLeft: Radius.circular(25),
+                                        bottomRight: Radius.circular(25),
+                                      ),
+                                      child: Container(
+                                        constraints: BoxConstraints.loose(
+                                            MediaQuery.of(context).size * 0.8),
+                                        padding: const EdgeInsets.fromLTRB(
+                                            10, 10, 10, 10),
+                                        color: const Color(0xFFF3F3F4),
+                                        child: const Text(
+                                          'View Profile',
+                                          softWrap: true,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 3,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            final message = state.messages[index - 1];
+                            return ChatBubble(
+                              key: ValueKey('message-${message.message_uuid}'),
+                              message: message,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    ChatMessageBox(
+                      chatId: widget.chatId,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(
-                height: 3,
-              ),
-              Text(
-                "Online",
-                style: TextStyle(
-                    color: Colors.black.withOpacity(0.4), fontSize: 14),
-              )
             ],
-          )
-        ],
-      ),
-      actions: <Widget>[
-        const Icon(
-          PhosphorIcons.phone,
-          color: Colors.green,
-          size: 32,
-        ),
-        const SizedBox(
-          width: 15,
-        ),
-        const Icon(
-          PhosphorIcons.video_camera,
-          color: Colors.green,
-          size: 35,
-        ),
-        const SizedBox(
-          width: 8,
-        ),
-        Container(
-          width: 13,
-          height: 13,
-          decoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white38)),
-        ),
-        const SizedBox(
-          width: 15,
-        ),
-      ],
-    );
-  }
-
-  Widget getBody() {
-    return Consumer<ChatsProvider>(
-      builder: (context, state, _) {
-        return Column(
-          children: [
-            Expanded(
-              child: ListView(
-                controller: _scrollController,
-                //reverse: true,
-                padding: const EdgeInsets.only(
-                  right: 20,
-                  left: 20,
-                  top: 20,
-                  bottom: 80,
-                ),
-                children: List.generate(state.messages.length, (index) {
-                  return ChatBubble(
-                    message: state.messages[index],
-                  );
-                }),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget getBottom() {
-    return Container(
-      height: 65,
-      width: double.infinity,
-      decoration: const BoxDecoration(color: Colors.white),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 0),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Container(
-                height: 50,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(50)),
-                child: TextFormField(
-                  onChanged: (text) {},
-                  // textInputAction: TextInputAction.newline,
-                  // keyboardType: TextInputType.multiline,
-                  // maxLines: 5,
-                  cursorColor: Colors.black,
-                  controller: _textEditingController,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    prefixIcon: Icon(
-                      PhosphorIcons.smiley,
-                      color: Colors.green,
-                      size: 25,
-                    ),
-                    hintText: "Say Something...",
-                    suffixIcon: Icon(
-                      PhosphorIcons.paperclip,
-                      color: Colors.green,
-                      size: 25,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 0.03.sw,
-            ),
-            GestureDetector(
-              onTap: () => _sendNewMessage(),
-              child: Icon(
-                PhosphorIcons.paper_plane_right,
-                size: 28.sp,
-                color: Colors.green,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
-  }
-
-  _sendNewMessage() async {
-    if (_textEditingController.text.trim().isEmpty) return;
-    Map<String, dynamic> data = {
-      'content': _textEditingController.text.trim().toString(),
-      'receiver_id': 9,
-      'time': DateTime.now().toString()
-    };
-    await context
-        .read<ChatsProvider>()
-        .sendMessage(message: data, chatId: widget.chatId);
-    _textEditingController.text = '';
   }
 }
