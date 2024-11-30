@@ -18,14 +18,14 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //  await Firebase.initializeApp(
   //     // options: const FirebaseOptions(
-  //     // apiKey: "AIzaSyB2oeTlaVcvKQg07AI_WmXdx5EjXR5eX0M",
-  //     // authDomain: "ajomoney-b221b.firebaseapp.com",
-  //     // databaseURL: "https://ajomoney-b221b.firebaseio.com",
-  //     // projectId: "ajomoney-b221b",
-  //     // storageBucket: "ajomoney-b221b.appspot.com",
-  //     // messagingSenderId: "1081822978310",
-  //     // appId: "1:1081822978310:web:c96b040b50428a8b8b3e87",
-  //     // measurementId: "G-0VKL4JCDMH"),
+  //     // apiKey: "",
+  //     // authDomain: "",
+  //     // databaseURL: "",
+  //     // projectId: "",
+  //     // storageBucket: "",
+  //     // messagingSenderId: "",
+  //     // appId: "",
+  //     // measurementId: ""),
   //     );
 
   await AppConfig.configure();
